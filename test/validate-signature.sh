@@ -1,0 +1,1 @@
+java -jar validate-signature.jar $1 $2 $3
