@@ -8,9 +8,9 @@ HD Derivation path
 
 Requirements
 ------------
-JDK 10
-Python 2.7
-Python modules mentioned in 'PythonPackages.txt'
+1) JDK 10
+2) Python 2.7
+3) Python modules mentioned in 'PythonPackages.txt'
 
 Test Scripts
 ------------
@@ -22,7 +22,7 @@ Test Scripts
 
 Installation Instructions
 --------------------------
-Install : make load BOLOS_SDK=SDK_LOCATION BOLOS_ENV=ENV_LOCATION
-Deletion : make delete BOLOS_SDK=SDK_LOCATION BOLOS_ENV=ENV_LOCATION
+1) Install : make load BOLOS_SDK=SDK_LOCATION BOLOS_ENV=ENV_LOCATION
+2) Deletion : make delete BOLOS_SDK=SDK_LOCATION BOLOS_ENV=ENV_LOCATION
 
 
