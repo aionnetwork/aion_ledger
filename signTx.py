@@ -39,47 +39,15 @@ def parse_bip32_path(path):
 			result = result + struct.pack(">I", 0x80000000 | int(element[0]))
 	return result
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--nonce', help="Nonce associated to the account")
-parser.add_argument('--gasprice', help="Network gas price")
-parser.add_argument('--startgas', help="startgas", default='21000')
-parser.add_argument('--amount', help="Amount to send in ether")
-parser.add_argument('--to', help="Destination address")
-parser.add_argument('--path', help="BIP 32 path to sign with")
-parser.add_argument('--data', help="Data to add, hex encoded")
-args = parser.parse_args()
+encodedTx = 'f3009456279f0dbc44fea52017147730193edab48c086a8a021e19e0c9bab2400000808601650162f0908252088502540be40001'.decode('hex');
+path = "44'/425'/0'/0'/0'"
 
-if args.path == None:
-	args.path = "44'/60'/0'/0/0"
-
-if args.data == None:
-	args.data = ""
-else:
-	args.data = decode_hex(args.data[2:])
-
-amount = Decimal(args.amount) * 10**18
-
-tx = Transaction(
-    nonce=int(args.nonce),
-    gasprice=int(args.gasprice),
-    startgas=int(args.startgas),
-    to=decode_hex(args.to[2:]),
-    value=int(amount),
-    data=args.data
-)
-
-encodedTx = encode(tx, UnsignedTransaction)
-
-donglePath = parse_bip32_path(args.path)
+donglePath = parse_bip32_path(path)
 apdu = "e0040000".decode('hex') + chr(len(donglePath) + 1 + len(encodedTx)) + chr(len(donglePath) / 4) + donglePath + encodedTx
 
 dongle = getDongle(True)
 result = dongle.exchange(bytes(apdu))
 
-v = result[0]
-r = int(str(result[1:1 + 32]).encode('hex'), 16)
-s = int(str(result[1 + 32: 1 + 32 + 32]).encode('hex'), 16)
 
-tx = Transaction(tx.nonce, tx.gasprice, tx.startgas, tx.to, tx.value, tx.data, v, r, s)
 
-print "Signed transaction " + encode_hex(encode(tx))
+print "Signed transaction " + str(result).encode('hex')

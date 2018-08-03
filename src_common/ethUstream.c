@@ -277,6 +277,21 @@ static void processV(txContext_t *context) {
     }
 }
 
+static void processTimestampAndMisc(txContext_t *context) {
+    if (context->currentFieldPos < context->currentFieldLength) {
+        uint32_t copySize =
+            (context->commandLength <
+                     ((context->currentFieldLength - context->currentFieldPos))
+                 ? context->commandLength
+                 : context->currentFieldLength - context->currentFieldPos);
+        copyTxData(context, NULL, copySize);
+    }
+    if (context->currentFieldPos == context->currentFieldLength) {
+        context->currentField++;
+        context->processingField = false;
+    }
+}
+
 
 static parserStatus_e processTxInternal(txContext_t *context, uint32_t processingFlags) {
     for (;;) {
@@ -368,6 +383,10 @@ static parserStatus_e processTxInternal(txContext_t *context, uint32_t processin
                 break;
             case TX_RLP_TO:
                 processTo(context);
+                break;
+            case TX_RLP_MISC:
+            case TX_RLP_TIMESTAMP:
+                processTimestampAndMisc(context);
                 break;
             case TX_RLP_DATA:
             case TX_RLP_R:
