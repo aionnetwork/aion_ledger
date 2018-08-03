@@ -26,6 +26,7 @@
 
 #include "os_io_seproxyhal.h"
 #include "string.h"
+#include "blake2b-ref.h"
 
 #include "glyphs.h"
 
@@ -39,15 +40,17 @@ unsigned int io_seproxyhal_touch_settings(const bagl_element_t *e);
 unsigned int io_seproxyhal_touch_exit(const bagl_element_t *e);
 unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e);
 unsigned int io_seproxyhal_touch_tx_cancel(const bagl_element_t *e);
-unsigned int io_seproxyhal_touch_address_ok(const bagl_element_t *e);
-unsigned int io_seproxyhal_touch_address_cancel(const bagl_element_t *e);
-unsigned int io_seproxyhal_touch_signMessage_ok(const bagl_element_t *e);
-unsigned int io_seproxyhal_touch_signMessage_cancel(const bagl_element_t *e);
+// unsigned int io_seproxyhal_touch_address_ok(const bagl_element_t *e);
+// unsigned int io_seproxyhal_touch_address_cancel(const bagl_element_t *e);
+// unsigned int io_seproxyhal_touch_signMessage_ok(const bagl_element_t *e);
+// unsigned int io_seproxyhal_touch_signMessage_cancel(const bagl_element_t *e);
 void ui_idle(void);
 
-uint32_t set_result_get_publicKey(void);
+uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey);
 
 #define MAX_BIP32_PATH 10
+#define KEY_SIZE 32
+#define HASH_SIZE 32
 
 #define CLA 0xE0
 #define INS_GET_PUBLIC_KEY 0x02
@@ -618,27 +621,27 @@ unsigned int ui_approval_blue_button(unsigned int button_mask, unsigned int butt
 
 #endif // #if defined(TARGET_BLUE)
 
-#if defined(TARGET_BLUE)
-const bagl_element_t ui_address_blue[] = {
-  {{BAGL_RECTANGLE                      , 0x00,   0,  68, 320, 413, 0, 0, BAGL_FILL, COLOR_BG_1, 0x000000, 0                                                                                 , 0   }, NULL, 0, 0, 0, NULL, NULL, NULL },
+ #if defined(TARGET_BLUE)
+// const bagl_element_t ui_address_blue[] = {
+//   {{BAGL_RECTANGLE                      , 0x00,   0,  68, 320, 413, 0, 0, BAGL_FILL, COLOR_BG_1, 0x000000, 0                                                                                 , 0   }, NULL, 0, 0, 0, NULL, NULL, NULL },
 
 
-  // erase screen (only under the status bar)
-  {{BAGL_RECTANGLE                      , 0x00,   0,  20, 320,  48, 0, 0, BAGL_FILL, COLOR_APP, COLOR_APP, 0                                                      , 0   }, NULL, 0, 0, 0, NULL, NULL, NULL},
+//   // erase screen (only under the status bar)
+//   {{BAGL_RECTANGLE                      , 0x00,   0,  20, 320,  48, 0, 0, BAGL_FILL, COLOR_APP, COLOR_APP, 0                                                      , 0   }, NULL, 0, 0, 0, NULL, NULL, NULL},
 
-  /// TOP STATUS BAR
-  {{BAGL_LABELINE                       , 0x00,   0,  45, 320,  30, 0, 0, BAGL_FILL, 0xFFFFFF, COLOR_APP, BAGL_FONT_OPEN_SANS_SEMIBOLD_10_13PX|BAGL_FONT_ALIGNMENT_CENTER, 0   }, "CONFIRM ACCOUNT", 0, 0, 0, NULL, NULL, NULL},
+//   /// TOP STATUS BAR
+//   {{BAGL_LABELINE                       , 0x00,   0,  45, 320,  30, 0, 0, BAGL_FILL, 0xFFFFFF, COLOR_APP, BAGL_FONT_OPEN_SANS_SEMIBOLD_10_13PX|BAGL_FONT_ALIGNMENT_CENTER, 0   }, "CONFIRM ACCOUNT", 0, 0, 0, NULL, NULL, NULL},
 
-  //{{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00, 264,  19,  56,  44, 0, 0, BAGL_FILL, COLOR_APP, COLOR_APP_LIGHT, BAGL_FONT_SYMBOLS_0|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, " " /*BAGL_FONT_SYMBOLS_0_DASHBOARD*/, 0, COLOR_APP, 0xFFFFFF, io_seproxyhal_touch_exit, NULL, NULL},
+//   //{{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00, 264,  19,  56,  44, 0, 0, BAGL_FILL, COLOR_APP, COLOR_APP_LIGHT, BAGL_FONT_SYMBOLS_0|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, " " /*BAGL_FONT_SYMBOLS_0_DASHBOARD*/, 0, COLOR_APP, 0xFFFFFF, io_seproxyhal_touch_exit, NULL, NULL},
 
-  {{BAGL_LABELINE                       , 0x00,  30, 106, 320,  30, 0, 0, BAGL_FILL, 0x999999, COLOR_BG_1, BAGL_FONT_OPEN_SANS_SEMIBOLD_8_11PX, 0   }, "ACCOUNT", 0, 0, 0, NULL, NULL, NULL},
+//   {{BAGL_LABELINE                       , 0x00,  30, 106, 320,  30, 0, 0, BAGL_FILL, 0x999999, COLOR_BG_1, BAGL_FONT_OPEN_SANS_SEMIBOLD_8_11PX, 0   }, "ACCOUNT", 0, 0, 0, NULL, NULL, NULL},
 
-  {{BAGL_LABELINE                       , 0x10,  30, 136, 260,  30, 0, 0, BAGL_FILL, 0x000000, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_10_13PX, 0   }, addressSummary, 0, 0, 0, NULL, NULL, NULL},
-  {{BAGL_LABELINE                       , 0x11,  30, 159, 260,  30, 0, 0, BAGL_FILL, 0x000000, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_10_13PX, 0   }, addressSummary, 0, 0, 0, NULL, NULL, NULL},
+//   {{BAGL_LABELINE                       , 0x10,  30, 136, 260,  30, 0, 0, BAGL_FILL, 0x000000, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_10_13PX, 0   }, addressSummary, 0, 0, 0, NULL, NULL, NULL},
+//   {{BAGL_LABELINE                       , 0x11,  30, 159, 260,  30, 0, 0, BAGL_FILL, 0x000000, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_10_13PX, 0   }, addressSummary, 0, 0, 0, NULL, NULL, NULL},
 
-  {{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00,  40, 414, 115,  36, 0,18, BAGL_FILL, 0xCCCCCC, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_11_14PX|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, "REJECT", 0, 0xB7B7B7, COLOR_BG_1, io_seproxyhal_touch_address_cancel, NULL, NULL},
-  {{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00, 165, 414, 115,  36, 0,18, BAGL_FILL, 0x41ccb4, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_11_14PX|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, "CONFIRM", 0, 0x3ab7a2, COLOR_BG_1, io_seproxyhal_touch_address_ok, NULL, NULL},
-};
+//   {{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00,  40, 414, 115,  36, 0,18, BAGL_FILL, 0xCCCCCC, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_11_14PX|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, "REJECT", 0, 0xB7B7B7, COLOR_BG_1, io_seproxyhal_touch_address_cancel, NULL, NULL},
+//   {{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00, 165, 414, 115,  36, 0,18, BAGL_FILL, 0x41ccb4, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_11_14PX|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, "CONFIRM", 0, 0x3ab7a2, COLOR_BG_1, io_seproxyhal_touch_address_ok, NULL, NULL},
+// };
 
 unsigned int ui_address_blue_prepro(const bagl_element_t* element) {
   copy_element_and_map_coin_colors(element);
@@ -818,42 +821,42 @@ unsigned int io_seproxyhal_touch_exit(const bagl_element_t *e) {
     return 0; // do not redraw the widget
 }
 
-unsigned int io_seproxyhal_touch_address_ok(const bagl_element_t *e) {
-    uint32_t tx = set_result_get_publicKey();
-    G_io_apdu_buffer[tx++] = 0x90;
-    G_io_apdu_buffer[tx++] = 0x00;
-    // Send back the response, do not restart the event loop
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
-    // Display back the original UX
-    ui_idle();
-    return 0; // do not redraw the widget
-}
+// unsigned int io_seproxyhal_touch_address_ok(const bagl_element_t *e) {
+//     uint32_t tx = set_result_get_publicKey();
+//     G_io_apdu_buffer[tx++] = 0x90;
+//     G_io_apdu_buffer[tx++] = 0x00;
+//     // Send back the response, do not restart the event loop
+//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
+//     // Display back the original UX
+//     ui_idle();
+//     return 0; // do not redraw the widget
+// }
 
-unsigned int io_seproxyhal_touch_address_cancel(const bagl_element_t *e) {
-    G_io_apdu_buffer[0] = 0x69;
-    G_io_apdu_buffer[1] = 0x85;
-    // Send back the response, do not restart the event loop
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-    // Display back the original UX
-    ui_idle();
-    return 0; // do not redraw the widget
-}
+// unsigned int io_seproxyhal_touch_address_cancel(const bagl_element_t *e) {
+//     G_io_apdu_buffer[0] = 0x69;
+//     G_io_apdu_buffer[1] = 0x85;
+//     // Send back the response, do not restart the event loop
+//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+//     // Display back the original UX
+//     ui_idle();
+//     return 0; // do not redraw the widget
+// }
 
-#if defined(TARGET_NANOS)
-unsigned int ui_address_nanos_button(unsigned int button_mask, unsigned int button_mask_counter) {
-    switch(button_mask) {
-        case BUTTON_EVT_RELEASED|BUTTON_LEFT: // CANCEL
-			      io_seproxyhal_touch_address_cancel(NULL);
-            break;
+// #if defined(TARGET_NANOS)
+// unsigned int ui_address_nanos_button(unsigned int button_mask, unsigned int button_mask_counter) {
+//     switch(button_mask) {
+//         case BUTTON_EVT_RELEASED|BUTTON_LEFT: // CANCEL
+// 			      io_seproxyhal_touch_address_cancel(NULL);
+//             break;
 
-        case BUTTON_EVT_RELEASED|BUTTON_RIGHT: { // OK
-			      io_seproxyhal_touch_address_ok(NULL);
-			      break;
-        }
-    }
-    return 0;
-}
-#endif // #if defined(TARGET_NANOS)
+//         case BUTTON_EVT_RELEASED|BUTTON_RIGHT: { // OK
+// 			      io_seproxyhal_touch_address_ok(NULL);
+// 			      break;
+//         }
+//     }
+//     return 0;
+// }
+// #endif // #if defined(TARGET_NANOS)
 
 uint32_t getV(txContent_t *txContent) {
     uint32_t v = 0;
@@ -890,10 +893,10 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     uint32_t tx = 0;
     uint8_t rLength, sLength, rOffset, sOffset;
     uint32_t v = getV(&tmpContent.txContent);
-    os_perso_derive_node_bip32(CX_CURVE_256K1, tmpCtx.transactionContext.bip32Path,
+    os_perso_derive_node_bip32(CX_CURVE_Ed25519, tmpCtx.transactionContext.bip32Path,
                                tmpCtx.transactionContext.pathLength,
                                privateKeyData, NULL);
-    cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32,
+    cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32,
                                  &privateKey);
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
     unsigned int info = 0;    
@@ -947,57 +950,57 @@ unsigned int io_seproxyhal_touch_tx_cancel(const bagl_element_t *e) {
 }
 
 
-unsigned int io_seproxyhal_touch_signMessage_ok(const bagl_element_t *e) {
-    uint8_t privateKeyData[32];
-    uint8_t signature[100];
-    uint8_t signatureLength;
-    cx_ecfp_private_key_t privateKey;
-    uint32_t tx = 0;
-    uint8_t rLength, sLength, rOffset, sOffset;
-    os_perso_derive_node_bip32(
-        CX_CURVE_256K1, tmpCtx.messageSigningContext.bip32Path,
-        tmpCtx.messageSigningContext.pathLength, privateKeyData, NULL);
-    cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
-    os_memset(privateKeyData, 0, sizeof(privateKeyData));
-    unsigned int info = 0;    
-    signatureLength =
-        cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
-                      tmpCtx.messageSigningContext.hash,
-                      sizeof(tmpCtx.messageSigningContext.hash), signature, &info);
-    os_memset(&privateKey, 0, sizeof(privateKey));
-    G_io_apdu_buffer[0] = 27;
-    if (info & CX_ECCINFO_PARITY_ODD) {
-      G_io_apdu_buffer[0]++;
-    }
-    if (info & CX_ECCINFO_xGTn) {
-      G_io_apdu_buffer[0] += 2;
-    }    
-    rLength = signature[3];
-    sLength = signature[4 + rLength + 1];
-    rOffset = (rLength == 33 ? 1 : 0);
-    sOffset = (sLength == 33 ? 1 : 0);
-    os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
-    os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
-               32);
-    tx = 65;
-    G_io_apdu_buffer[tx++] = 0x90;
-    G_io_apdu_buffer[tx++] = 0x00;
-    // Send back the response, do not restart the event loop
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
-    // Display back the original UX
-    ui_idle();
-    return 0; // do not redraw the widget
-}
+// unsigned int io_seproxyhal_touch_signMessage_ok(const bagl_element_t *e) {
+//     uint8_t privateKeyData[32];
+//     uint8_t signature[100];
+//     uint8_t signatureLength;
+//     cx_ecfp_private_key_t privateKey;
+//     uint32_t tx = 0;
+//     uint8_t rLength, sLength, rOffset, sOffset;
+//     os_perso_derive_node_bip32(
+//         CX_CURVE_256K1, tmpCtx.messageSigningContext.bip32Path,
+//         tmpCtx.messageSigningContext.pathLength, privateKeyData, NULL);
+//     cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
+//     os_memset(privateKeyData, 0, sizeof(privateKeyData));
+//     unsigned int info = 0;    
+//     signatureLength =
+//         cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
+//                       tmpCtx.messageSigningContext.hash,
+//                       sizeof(tmpCtx.messageSigningContext.hash), signature, &info);
+//     os_memset(&privateKey, 0, sizeof(privateKey));
+//     G_io_apdu_buffer[0] = 27;
+//     if (info & CX_ECCINFO_PARITY_ODD) {
+//       G_io_apdu_buffer[0]++;
+//     }
+//     if (info & CX_ECCINFO_xGTn) {
+//       G_io_apdu_buffer[0] += 2;
+//     }    
+//     rLength = signature[3];
+//     sLength = signature[4 + rLength + 1];
+//     rOffset = (rLength == 33 ? 1 : 0);
+//     sOffset = (sLength == 33 ? 1 : 0);
+//     os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
+//     os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
+//                32);
+//     tx = 65;
+//     G_io_apdu_buffer[tx++] = 0x90;
+//     G_io_apdu_buffer[tx++] = 0x00;
+//     // Send back the response, do not restart the event loop
+//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
+//     // Display back the original UX
+//     ui_idle();
+//     return 0; // do not redraw the widget
+// }
 
-unsigned int io_seproxyhal_touch_signMessage_cancel(const bagl_element_t *e) {
-    G_io_apdu_buffer[0] = 0x69;
-    G_io_apdu_buffer[1] = 0x85;
-    // Send back the response, do not restart the event loop
-    io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-    // Display back the original UX
-    ui_idle();
-    return 0; // do not redraw the widget
-}
+// unsigned int io_seproxyhal_touch_signMessage_cancel(const bagl_element_t *e) {
+//     G_io_apdu_buffer[0] = 0x69;
+//     G_io_apdu_buffer[1] = 0x85;
+//     // Send back the response, do not restart the event loop
+//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
+//     // Display back the original UX
+//     ui_idle();
+//     return 0; // do not redraw the widget
+// }
 
 #if defined(TARGET_BLUE)
 void ui_approval_blue_init(void) {
@@ -1014,15 +1017,15 @@ void ui_approval_transaction_blue_init(void) {
   ui_approval_blue_init();
 }
 
-void ui_approval_message_sign_blue_init(void) {
-  ui_approval_blue_ok = (bagl_element_callback_t) io_seproxyhal_touch_signMessage_ok;
-  ui_approval_blue_cancel = (bagl_element_callback_t) io_seproxyhal_touch_signMessage_cancel;
-  G_ui_approval_blue_state = APPROVAL_MESSAGE;
-  ui_approval_blue_values[0] = fullAmount;
-  ui_approval_blue_values[1] = NULL;
-  ui_approval_blue_values[2] = NULL;
-  ui_approval_blue_init();
-}
+// void ui_approval_message_sign_blue_init(void) {
+//   ui_approval_blue_ok = (bagl_element_callback_t) io_seproxyhal_touch_signMessage_ok;
+//   ui_approval_blue_cancel = (bagl_element_callback_t) io_seproxyhal_touch_signMessage_cancel;
+//   G_ui_approval_blue_state = APPROVAL_MESSAGE;
+//   ui_approval_blue_values[0] = fullAmount;
+//   ui_approval_blue_values[1] = NULL;
+//   ui_approval_blue_values[2] = NULL;
+//   ui_approval_blue_init();
+// }
 
 #elif defined(TARGET_NANOS)
 unsigned int ui_approval_nanos_button(unsigned int button_mask, unsigned int button_mask_counter) {
@@ -1082,18 +1085,28 @@ unsigned short io_exchange_al(unsigned char channel, unsigned short tx_len) {
     return 0;
 }
 
-uint32_t set_result_get_publicKey() {
+uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey) {
     uint32_t tx = 0;
-    G_io_apdu_buffer[tx++] = 65;
-    os_memmove(G_io_apdu_buffer + tx, tmpCtx.publicKeyContext.publicKey.W, 65);
-    tx += 65;
-    G_io_apdu_buffer[tx++] = 40;
-    os_memmove(G_io_apdu_buffer + tx, tmpCtx.publicKeyContext.address, 40);
-    tx += 40;
-    if (tmpCtx.publicKeyContext.getChaincode) {
-      os_memmove(G_io_apdu_buffer + tx, tmpCtx.publicKeyContext.chainCode, 32);
-      tx += 32;
+
+    // fetch public key
+    char publicKey[KEY_SIZE];
+    for (int i = 0; i < KEY_SIZE; i++) {
+        publicKey[i] = pubKey->W[64 - i];
     }
+    if ((pubKey->W[KEY_SIZE] & 1) != 0) {
+        publicKey[KEY_SIZE-1] |= 0x80;
+    }
+
+    // map address from public key
+    unsigned char hash[HASH_SIZE];
+    blake2b(hash, publicKey, NULL, HASH_SIZE, KEY_SIZE, 0);
+    hash[0] = 0xa0;
+
+    // write to output buffer
+    os_memmove(G_io_apdu_buffer, publicKey, KEY_SIZE);
+    os_memmove(G_io_apdu_buffer+KEY_SIZE, hash, HASH_SIZE);
+    tx = KEY_SIZE+HASH_SIZE;
+
     return tx;
 }
 
@@ -1138,6 +1151,7 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
   uint32_t i;
   uint8_t bip32PathLength = *(dataBuffer++);
   cx_ecfp_private_key_t privateKey;
+  cx_ecfp_public_key_t public_key;
 
   if ((bip32PathLength < 0x01) ||
       (bip32PathLength > MAX_BIP32_PATH)) {
@@ -1157,41 +1171,41 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
     dataBuffer += 4;
   }
   tmpCtx.publicKeyContext.getChaincode = (p2 == P2_CHAINCODE);
-  os_perso_derive_node_bip32(CX_CURVE_256K1, bip32Path, bip32PathLength, privateKeyData, (tmpCtx.publicKeyContext.getChaincode ? tmpCtx.publicKeyContext.chainCode : NULL));
-  cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
-  cx_ecfp_generate_pair(CX_CURVE_256K1, &tmpCtx.publicKeyContext.publicKey, &privateKey, 1);
+  os_perso_derive_node_bip32(CX_CURVE_Ed25519, bip32Path, bip32PathLength, privateKeyData, (tmpCtx.publicKeyContext.getChaincode ? tmpCtx.publicKeyContext.chainCode : NULL));
+  cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, &privateKey);
+  cx_ecfp_generate_pair(CX_CURVE_Ed25519, &public_key, &privateKey, 1);
   os_memset(&privateKey, 0, sizeof(privateKey));
   os_memset(privateKeyData, 0, sizeof(privateKeyData));
-  getEthAddressStringFromKey(&tmpCtx.publicKeyContext.publicKey, tmpCtx.publicKeyContext.address, &sha3);
-  if (p1 == P1_NON_CONFIRM) {
-    *tx = set_result_get_publicKey();
+//  getEthAddressStringFromKey(&tmpCtx.publicKeyContext.publicKey, tmpCtx.publicKeyContext.address, &sha3);
+//  if (p1 == P1_NON_CONFIRM) {
+    *tx = set_result_get_publicKey(&public_key);
     THROW(0x9000);
-  } 
-  else 
-  {
-    /*
-    addressSummary[0] = '0';
-    addressSummary[1] = 'x';
-    os_memmove((unsigned char *)(addressSummary + 2), tmpCtx.publicKeyContext.address, 4);
-    os_memmove((unsigned char *)(addressSummary + 6), "...", 3);
-    os_memmove((unsigned char *)(addressSummary + 9), tmpCtx.publicKeyContext.address + 40 - 4, 4);
-    addressSummary[13] = '\0';
-    */
-
+//  } 
+//  else 
+//  {
+//    /*
+//    addressSummary[0] = '0';
+//    addressSummary[1] = 'x';
+//    os_memmove((unsigned char *)(addressSummary + 2), tmpCtx.publicKeyContext.address, 4);
+//    os_memmove((unsigned char *)(addressSummary + 6), "...", 3);
+//    os_memmove((unsigned char *)(addressSummary + 9), tmpCtx.publicKeyContext.address + 40 - 4, 4);
+//    addressSummary[13] = '\0';
+//    */
+//
     // prepare for a UI based reply
-    skipWarning = false;
-#if defined(TARGET_BLUE)
-    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
-    UX_DISPLAY(ui_address_blue, ui_address_blue_prepro);
-#elif defined(TARGET_NANOS)
-    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
-    ux_step = 0;
-    ux_step_count = 2;
-    UX_DISPLAY(ui_address_nanos, ui_address_prepro);   
-#endif // #if TARGET_ID
+//    skipWarning = false;
+// #if defined(TARGET_BLUE)
+//    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
+//    UX_DISPLAY(ui_address_blue, ui_address_blue_prepro);
+// #elif defined(TARGET_NANOS)
+//    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
+//    ux_step = 0;
+//    ux_step_count = 2;
+//    UX_DISPLAY(ui_address_nanos, ui_address_prepro);   
+// #endif // #if TARGET_ID
                     
-    *flags |= IO_ASYNCH_REPLY;
-  }
+//     *flags |= IO_ASYNCH_REPLY;
+//   }
 }
 
 void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
@@ -1439,7 +1453,7 @@ void handleGetAppConfiguration(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint
   THROW(0x9000);
 }
 
-void handleSignPersonalMessage(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
+/*void handleSignPersonalMessage(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
   UNUSED(tx);
   uint8_t hashMessage[32];
   if (p1 == P1_FIRST) {
@@ -1518,7 +1532,7 @@ void handleSignPersonalMessage(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint
   } else {
     THROW(0x9000);
   }
-}
+}*/
 
 void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
   unsigned short sw = 0;
@@ -1542,9 +1556,9 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
           handleGetAppConfiguration(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
           break;
 
-        case INS_SIGN_PERSONAL_MESSAGE: 
-          handleSignPersonalMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
-          break;
+        // case INS_SIGN_PERSONAL_MESSAGE: 
+        //   handleSignPersonalMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
+        //   break;
 
 #if 0
         case 0xFF: // return to dashboard
