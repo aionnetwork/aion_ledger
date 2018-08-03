@@ -79,7 +79,7 @@ typedef struct tokenContext_t {
 
 typedef struct publicKeyContext_t {
     cx_ecfp_public_key_t publicKey;
-    uint8_t address[41];
+    uint8_t address[65];
     uint8_t chainCode[32];
     bool getChaincode;
 } publicKeyContext_t;
@@ -113,7 +113,7 @@ cx_sha3_t sha3;
 tokenContext_t tokenContext;
 volatile uint8_t dataAllowed;
 volatile char addressSummary[32];
-volatile char fullAddress[43];
+volatile char fullAddress[67];
 volatile char fullAmount[50];
 volatile char maxFee[60];
 volatile bool dataPresent;
@@ -1181,10 +1181,10 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
     // prepare for a UI based reply
     skipWarning = false;
 #if defined(TARGET_BLUE)
-    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 40, tmpCtx.publicKeyContext.address);
+    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
     UX_DISPLAY(ui_address_blue, ui_address_blue_prepro);
 #elif defined(TARGET_NANOS)
-    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 40, tmpCtx.publicKeyContext.address);
+    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
     ux_step = 0;
     ux_step_count = 2;
     UX_DISPLAY(ui_address_nanos, ui_address_prepro);   
@@ -1199,7 +1199,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
   parserStatus_e txResult;                    
   uint256_t gasPrice, startGas, uint256;
   uint32_t i;
-  uint8_t address[41];
+  uint8_t address[65];
   uint8_t decimals = WEI_TO_ETHER;
   uint8_t *ticker = PIC(chainConfig->coinName);
   uint8_t tickerOffset = 0;
@@ -1331,12 +1331,12 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
                 currentToken = PIC(&TOKENS_MUSICOIN[i]);
                 break;
             } 
-            if (os_memcmp(currentToken->address, tmpContent.txContent.destination, 20) == 0) {
+            if (os_memcmp(currentToken->address, tmpContent.txContent.destination, 32) == 0) {
                 dataPresent = false;
                 decimals = currentToken->decimals;
                 ticker = currentToken->ticker;
-                tmpContent.txContent.destinationLength = 20;
-                os_memmove(tmpContent.txContent.destination, tokenContext.data + 4 + 12, 20);
+                tmpContent.txContent.destinationLength = 32;
+                os_memmove(tmpContent.txContent.destination, tokenContext.data + 4 + 12, 32);
                 os_memmove(tmpContent.txContent.value.value, tokenContext.data + 4 + 32, 32);
                 tmpContent.txContent.value.length = 32;
                 break;
@@ -1363,8 +1363,8 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
 
     fullAddress[0] = '0';
     fullAddress[1] = 'x';
-    os_memmove((unsigned char *)fullAddress+2, address, 40);
-    fullAddress[42] = '\0';
+    os_memmove((unsigned char *)fullAddress+2, address, 64);
+    fullAddress[66] = '\0';
   }
   else 
   {

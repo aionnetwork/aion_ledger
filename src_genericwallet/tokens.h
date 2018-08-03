@@ -18,7 +18,7 @@
 #include "os.h"
 
 typedef struct tokenDefinition_t {
-    uint8_t address[20];
+    uint8_t address[32];
     uint8_t ticker[10];
     uint8_t decimals;
 } tokenDefinition_t;
