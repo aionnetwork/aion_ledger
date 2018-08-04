@@ -72,6 +72,10 @@ uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey);
 #define OFFSET_CDATA 5
 
 #define WEI_TO_ETHER 18
+#define MAX_TRANSACTION_SIZE 230
+
+unsigned char transaction_buffer[MAX_TRANSACTION_SIZE];
+uint16_t buffer_counter = 0;
 
 static const uint8_t const TOKEN_TRANSFER_ID[] = { 0xa9, 0x05, 0x9c, 0xbb };
 typedef struct tokenContext_t {
@@ -887,7 +891,7 @@ uint32_t getV(txContent_t *txContent) {
 
 unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     uint8_t privateKeyData[32];
-    uint8_t signature[100];
+    //uint8_t signature[100];
     uint8_t signatureLength;
     cx_ecfp_private_key_t privateKey;
     uint32_t tx = 0;
@@ -900,35 +904,40 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
                                  &privateKey);
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
     unsigned int info = 0;    
+
+    // get hash
+    unsigned char hash[HASH_SIZE];
+    blake2b(hash, transaction_buffer, NULL, HASH_SIZE, buffer_counter, 0);
+
     signatureLength =
-        cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
-                      tmpCtx.transactionContext.hash,
-                      sizeof(tmpCtx.transactionContext.hash), signature, &info);
+        cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512,
+                      hash,
+                      HASH_SIZE, NULL, 0, G_io_apdu_buffer, &info);
     os_memset(&privateKey, 0, sizeof(privateKey));    
-    // Parity is present in the sequence tag in the legacy API
-    if (tmpContent.txContent.vLength == 0) {
-      // Legacy API
-      G_io_apdu_buffer[0] = 27;
-    }
-    else {
-      // New API
-      // Note that this is wrong for a large v, but the client can always recover
-      G_io_apdu_buffer[0] = (v * 2) + 35; 
-    }
-    if (info & CX_ECCINFO_PARITY_ODD) {
-      G_io_apdu_buffer[0]++;
-    }
-    if (info & CX_ECCINFO_xGTn) {
-      G_io_apdu_buffer[0] += 2;
-    }
-    rLength = signature[3];
-    sLength = signature[4 + rLength + 1];
-    rOffset = (rLength == 33 ? 1 : 0);
-    sOffset = (sLength == 33 ? 1 : 0);
-    os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
-    os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
-               32);
-    tx = 65;
+    // // Parity is present in the sequence tag in the legacy API
+    // if (tmpContent.txContent.vLength == 0) {
+    //   // Legacy API
+    //   G_io_apdu_buffer[0] = 27;
+    // }
+    // else {
+    //   // New API
+    //   // Note that this is wrong for a large v, but the client can always recover
+    //   G_io_apdu_buffer[0] = (v * 2) + 35; 
+    // }
+    // if (info & CX_ECCINFO_PARITY_ODD) {
+    //   G_io_apdu_buffer[0]++;
+    // }
+    // if (info & CX_ECCINFO_xGTn) {
+    //   G_io_apdu_buffer[0] += 2;
+    // }
+    // rLength = signature[3];
+    // sLength = signature[4 + rLength + 1];
+    // rOffset = (rLength == 33 ? 1 : 0);
+    // sOffset = (sLength == 33 ? 1 : 0);
+    // os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
+    // os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
+    //            32);
+    tx = signatureLength;
     G_io_apdu_buffer[tx++] = 0x90;
     G_io_apdu_buffer[tx++] = 0x00;
 send:    
@@ -1235,6 +1244,15 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
     }
     dataPresent = false;
     tokenContext.provisioned = false;
+
+    // concatenate to transaction buffer
+    uint16_t i = 0;  
+    buffer_counter =  dataLength;      
+    for(i=0;i<dataLength;i++){
+      transaction_buffer[i] = workBuffer[i];
+    }
+    transaction_buffer[buffer_counter] = '\0';
+
     initTx(&txContext, &sha3, &tmpContent.txContent, customProcessor, NULL);
   } 
   else 
