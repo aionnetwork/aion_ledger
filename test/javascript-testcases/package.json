@@ -1,0 +1,24 @@
+{
+  "name": "blue-app-neo-tests",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test:node-hid": "mocha ./test/node-hid.js --no-timeouts",
+    "test:u2f": "webpack-dev-server"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@ledgerhq/hw-transport-node-hid": "^4.12.0",
+    "@ledgerhq/hw-transport-u2f": "^4.12.0",
+    "babel-runtime": "^6.26.0",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb-base": "^12.1.0",
+    "eslint-plugin-import": "^2.12.0",
+    "mocha": "^5.2.0",
+    "webpack": "^4.10.2",
+    "webpack-cli": "^2.1.4",
+    "webpack-dev-server": "^3.1.4"
+  }
+}

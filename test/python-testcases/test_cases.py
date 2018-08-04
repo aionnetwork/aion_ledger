@@ -80,31 +80,30 @@ def test_verify_signature():
     pub_key = dongle.exchange(bytes(apdu))
     dongle_pub_key = str(pub_key).encode('hex')
 
-    # rlp encode
     # put transaction details
     nonce = '0'
     to_address = 'a0185ef98ac4841900b49ad9b432af2db7235e09ec3755e5ee36e9c4947007dd' # 32 byte hex string
     value = '100000000000000000000'   # big integer
-    data = '00' # hex string
+    data = 'a0f2daa8de60d0e911fb468492242d60e15757408aff2902a0f2daa8de60d0e911fb468492242d604e1e11ec6f142bfee15757408aff2902a0f2daa8de60d0e911fb468492242d604e1e11ec6f142bfee15757408aff2902a0f2daa8de60d0e911fb468492242d604e1e11ec6f14a0f2daa0f2daa0f2daa0f2daa0f2' # hex string
     timestamp = '3287438' # big integer
     energy = '21000' # big integer
     energy_price = '10000000000' # long
 
     # generate rlp encode with contract data
-    # query = 'sh generate-rlp-encode.sh '+nonce+' '+energy_price+' '+energy+' '+to_address+' '+value+' '+data+' '+timestamp
-    # f = os.popen(query) 
-    # query_result = f.readlines()
-    # rlpEncode = query_result[0].strip()
-    # encodedTx = rlpEncode.decode('hex')
-    # print "\nEncoded tx to be sent : "+rlpEncode+"\n"
-
-    # generate rlp encode without contract data
-    query = 'sh rlp-encode-without-contract-data.sh '+nonce+' '+energy_price+' '+energy+' '+to_address+' '+value+' '+timestamp
+    query = 'sh generate-rlp-encode.sh '+nonce+' '+energy_price+' '+energy+' '+to_address+' '+value+' '+data+' '+timestamp
     f = os.popen(query) 
     query_result = f.readlines()
     rlpEncode = query_result[0].strip()
     encodedTx = rlpEncode.decode('hex')
     print "\nEncoded tx to be sent : "+rlpEncode+"\n"
+
+    # generate rlp encode without contract data
+    # query = 'sh rlp-encode-without-contract-data.sh '+nonce+' '+energy_price+' '+energy+' '+to_address+' '+value+' '+timestamp
+    # f = os.popen(query) 
+    # query_result = f.readlines()
+    # rlpEncode = query_result[0].strip()
+    # encodedTx = rlpEncode.decode('hex')
+    # print "\nEncoded tx to be sent : "+rlpEncode+"\n"
 
     # get blake2b hash
     query = 'sh Blake2b.sh '+rlpEncode
