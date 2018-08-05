@@ -40,10 +40,6 @@ unsigned int io_seproxyhal_touch_settings(const bagl_element_t *e);
 unsigned int io_seproxyhal_touch_exit(const bagl_element_t *e);
 unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e);
 unsigned int io_seproxyhal_touch_tx_cancel(const bagl_element_t *e);
-// unsigned int io_seproxyhal_touch_address_ok(const bagl_element_t *e);
-// unsigned int io_seproxyhal_touch_address_cancel(const bagl_element_t *e);
-// unsigned int io_seproxyhal_touch_signMessage_ok(const bagl_element_t *e);
-// unsigned int io_seproxyhal_touch_signMessage_cancel(const bagl_element_t *e);
 void ui_idle(void);
 
 uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey);
@@ -71,7 +67,7 @@ uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey);
 #define OFFSET_LC 4
 #define OFFSET_CDATA 5
 
-#define WEI_TO_ETHER 18
+#define WEI_TO_AION 18
 #define MAX_TRANSACTION_SIZE 230
 
 unsigned char transaction_buffer[MAX_TRANSACTION_SIZE];
@@ -142,9 +138,6 @@ WIDE internalStorage_t N_storage_real;
 #define N_storage (*(WIDE internalStorage_t*) PIC(&N_storage_real)) 
 
 static const char const CONTRACT_ADDRESS[] = "New contract";
-
-static const char const SIGN_MAGIC[] = "\x19"
-                                       "Ethereum Signed Message:\n";
 
 const unsigned char hex_digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
                                     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
@@ -626,26 +619,6 @@ unsigned int ui_approval_blue_button(unsigned int button_mask, unsigned int butt
 #endif // #if defined(TARGET_BLUE)
 
  #if defined(TARGET_BLUE)
-// const bagl_element_t ui_address_blue[] = {
-//   {{BAGL_RECTANGLE                      , 0x00,   0,  68, 320, 413, 0, 0, BAGL_FILL, COLOR_BG_1, 0x000000, 0                                                                                 , 0   }, NULL, 0, 0, 0, NULL, NULL, NULL },
-
-
-//   // erase screen (only under the status bar)
-//   {{BAGL_RECTANGLE                      , 0x00,   0,  20, 320,  48, 0, 0, BAGL_FILL, COLOR_APP, COLOR_APP, 0                                                      , 0   }, NULL, 0, 0, 0, NULL, NULL, NULL},
-
-//   /// TOP STATUS BAR
-//   {{BAGL_LABELINE                       , 0x00,   0,  45, 320,  30, 0, 0, BAGL_FILL, 0xFFFFFF, COLOR_APP, BAGL_FONT_OPEN_SANS_SEMIBOLD_10_13PX|BAGL_FONT_ALIGNMENT_CENTER, 0   }, "CONFIRM ACCOUNT", 0, 0, 0, NULL, NULL, NULL},
-
-//   //{{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00, 264,  19,  56,  44, 0, 0, BAGL_FILL, COLOR_APP, COLOR_APP_LIGHT, BAGL_FONT_SYMBOLS_0|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, " " /*BAGL_FONT_SYMBOLS_0_DASHBOARD*/, 0, COLOR_APP, 0xFFFFFF, io_seproxyhal_touch_exit, NULL, NULL},
-
-//   {{BAGL_LABELINE                       , 0x00,  30, 106, 320,  30, 0, 0, BAGL_FILL, 0x999999, COLOR_BG_1, BAGL_FONT_OPEN_SANS_SEMIBOLD_8_11PX, 0   }, "ACCOUNT", 0, 0, 0, NULL, NULL, NULL},
-
-//   {{BAGL_LABELINE                       , 0x10,  30, 136, 260,  30, 0, 0, BAGL_FILL, 0x000000, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_10_13PX, 0   }, addressSummary, 0, 0, 0, NULL, NULL, NULL},
-//   {{BAGL_LABELINE                       , 0x11,  30, 159, 260,  30, 0, 0, BAGL_FILL, 0x000000, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_10_13PX, 0   }, addressSummary, 0, 0, 0, NULL, NULL, NULL},
-
-//   {{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00,  40, 414, 115,  36, 0,18, BAGL_FILL, 0xCCCCCC, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_11_14PX|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, "REJECT", 0, 0xB7B7B7, COLOR_BG_1, io_seproxyhal_touch_address_cancel, NULL, NULL},
-//   {{BAGL_RECTANGLE | BAGL_FLAG_TOUCHABLE, 0x00, 165, 414, 115,  36, 0,18, BAGL_FILL, 0x41ccb4, COLOR_BG_1, BAGL_FONT_OPEN_SANS_REGULAR_11_14PX|BAGL_FONT_ALIGNMENT_CENTER|BAGL_FONT_ALIGNMENT_MIDDLE, 0 }, "CONFIRM", 0, 0x3ab7a2, COLOR_BG_1, io_seproxyhal_touch_address_ok, NULL, NULL},
-// };
 
 unsigned int ui_address_blue_prepro(const bagl_element_t* element) {
   copy_element_and_map_coin_colors(element);
@@ -825,43 +798,6 @@ unsigned int io_seproxyhal_touch_exit(const bagl_element_t *e) {
     return 0; // do not redraw the widget
 }
 
-// unsigned int io_seproxyhal_touch_address_ok(const bagl_element_t *e) {
-//     uint32_t tx = set_result_get_publicKey();
-//     G_io_apdu_buffer[tx++] = 0x90;
-//     G_io_apdu_buffer[tx++] = 0x00;
-//     // Send back the response, do not restart the event loop
-//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
-//     // Display back the original UX
-//     ui_idle();
-//     return 0; // do not redraw the widget
-// }
-
-// unsigned int io_seproxyhal_touch_address_cancel(const bagl_element_t *e) {
-//     G_io_apdu_buffer[0] = 0x69;
-//     G_io_apdu_buffer[1] = 0x85;
-//     // Send back the response, do not restart the event loop
-//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-//     // Display back the original UX
-//     ui_idle();
-//     return 0; // do not redraw the widget
-// }
-
-// #if defined(TARGET_NANOS)
-// unsigned int ui_address_nanos_button(unsigned int button_mask, unsigned int button_mask_counter) {
-//     switch(button_mask) {
-//         case BUTTON_EVT_RELEASED|BUTTON_LEFT: // CANCEL
-// 			      io_seproxyhal_touch_address_cancel(NULL);
-//             break;
-
-//         case BUTTON_EVT_RELEASED|BUTTON_RIGHT: { // OK
-// 			      io_seproxyhal_touch_address_ok(NULL);
-// 			      break;
-//         }
-//     }
-//     return 0;
-// }
-// #endif // #if defined(TARGET_NANOS)
-
 uint32_t getV(txContent_t *txContent) {
     uint32_t v = 0;
     if (txContent->vLength == 1) {
@@ -914,29 +850,7 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
                       hash,
                       HASH_SIZE, NULL, 0, G_io_apdu_buffer, &info);
     os_memset(&privateKey, 0, sizeof(privateKey));    
-    // // Parity is present in the sequence tag in the legacy API
-    // if (tmpContent.txContent.vLength == 0) {
-    //   // Legacy API
-    //   G_io_apdu_buffer[0] = 27;
-    // }
-    // else {
-    //   // New API
-    //   // Note that this is wrong for a large v, but the client can always recover
-    //   G_io_apdu_buffer[0] = (v * 2) + 35; 
-    // }
-    // if (info & CX_ECCINFO_PARITY_ODD) {
-    //   G_io_apdu_buffer[0]++;
-    // }
-    // if (info & CX_ECCINFO_xGTn) {
-    //   G_io_apdu_buffer[0] += 2;
-    // }
-    // rLength = signature[3];
-    // sLength = signature[4 + rLength + 1];
-    // rOffset = (rLength == 33 ? 1 : 0);
-    // sOffset = (sLength == 33 ? 1 : 0);
-    // os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
-    // os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
-    //            32);
+
     tx = signatureLength;
     G_io_apdu_buffer[tx++] = 0x90;
     G_io_apdu_buffer[tx++] = 0x00;
@@ -958,59 +872,6 @@ unsigned int io_seproxyhal_touch_tx_cancel(const bagl_element_t *e) {
     return 0; // do not redraw the widget
 }
 
-
-// unsigned int io_seproxyhal_touch_signMessage_ok(const bagl_element_t *e) {
-//     uint8_t privateKeyData[32];
-//     uint8_t signature[100];
-//     uint8_t signatureLength;
-//     cx_ecfp_private_key_t privateKey;
-//     uint32_t tx = 0;
-//     uint8_t rLength, sLength, rOffset, sOffset;
-//     os_perso_derive_node_bip32(
-//         CX_CURVE_256K1, tmpCtx.messageSigningContext.bip32Path,
-//         tmpCtx.messageSigningContext.pathLength, privateKeyData, NULL);
-//     cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
-//     os_memset(privateKeyData, 0, sizeof(privateKeyData));
-//     unsigned int info = 0;    
-//     signatureLength =
-//         cx_ecdsa_sign(&privateKey, CX_RND_RFC6979 | CX_LAST, CX_SHA256,
-//                       tmpCtx.messageSigningContext.hash,
-//                       sizeof(tmpCtx.messageSigningContext.hash), signature, &info);
-//     os_memset(&privateKey, 0, sizeof(privateKey));
-//     G_io_apdu_buffer[0] = 27;
-//     if (info & CX_ECCINFO_PARITY_ODD) {
-//       G_io_apdu_buffer[0]++;
-//     }
-//     if (info & CX_ECCINFO_xGTn) {
-//       G_io_apdu_buffer[0] += 2;
-//     }    
-//     rLength = signature[3];
-//     sLength = signature[4 + rLength + 1];
-//     rOffset = (rLength == 33 ? 1 : 0);
-//     sOffset = (sLength == 33 ? 1 : 0);
-//     os_memmove(G_io_apdu_buffer + 1, signature + 4 + rOffset, 32);
-//     os_memmove(G_io_apdu_buffer + 1 + 32, signature + 4 + rLength + 2 + sOffset,
-//                32);
-//     tx = 65;
-//     G_io_apdu_buffer[tx++] = 0x90;
-//     G_io_apdu_buffer[tx++] = 0x00;
-//     // Send back the response, do not restart the event loop
-//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, tx);
-//     // Display back the original UX
-//     ui_idle();
-//     return 0; // do not redraw the widget
-// }
-
-// unsigned int io_seproxyhal_touch_signMessage_cancel(const bagl_element_t *e) {
-//     G_io_apdu_buffer[0] = 0x69;
-//     G_io_apdu_buffer[1] = 0x85;
-//     // Send back the response, do not restart the event loop
-//     io_exchange(CHANNEL_APDU | IO_RETURN_AFTER_TX, 2);
-//     // Display back the original UX
-//     ui_idle();
-//     return 0; // do not redraw the widget
-// }
-
 #if defined(TARGET_BLUE)
 void ui_approval_blue_init(void) {
   UX_DISPLAY(ui_approval_blue, ui_approval_blue_prepro);
@@ -1025,16 +886,6 @@ void ui_approval_transaction_blue_init(void) {
   ui_approval_blue_values[2] = maxFee;
   ui_approval_blue_init();
 }
-
-// void ui_approval_message_sign_blue_init(void) {
-//   ui_approval_blue_ok = (bagl_element_callback_t) io_seproxyhal_touch_signMessage_ok;
-//   ui_approval_blue_cancel = (bagl_element_callback_t) io_seproxyhal_touch_signMessage_cancel;
-//   G_ui_approval_blue_state = APPROVAL_MESSAGE;
-//   ui_approval_blue_values[0] = fullAmount;
-//   ui_approval_blue_values[1] = NULL;
-//   ui_approval_blue_values[2] = NULL;
-//   ui_approval_blue_init();
-// }
 
 #elif defined(TARGET_NANOS)
 unsigned int ui_approval_nanos_button(unsigned int button_mask, unsigned int button_mask_counter) {
@@ -1185,36 +1036,8 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
   cx_ecfp_generate_pair(CX_CURVE_Ed25519, &public_key, &privateKey, 1);
   os_memset(&privateKey, 0, sizeof(privateKey));
   os_memset(privateKeyData, 0, sizeof(privateKeyData));
-//  getEthAddressStringFromKey(&tmpCtx.publicKeyContext.publicKey, tmpCtx.publicKeyContext.address, &sha3);
-//  if (p1 == P1_NON_CONFIRM) {
-    *tx = set_result_get_publicKey(&public_key);
-    THROW(0x9000);
-//  } 
-//  else 
-//  {
-//    /*
-//    addressSummary[0] = '0';
-//    addressSummary[1] = 'x';
-//    os_memmove((unsigned char *)(addressSummary + 2), tmpCtx.publicKeyContext.address, 4);
-//    os_memmove((unsigned char *)(addressSummary + 6), "...", 3);
-//    os_memmove((unsigned char *)(addressSummary + 9), tmpCtx.publicKeyContext.address + 40 - 4, 4);
-//    addressSummary[13] = '\0';
-//    */
-//
-    // prepare for a UI based reply
-//    skipWarning = false;
-// #if defined(TARGET_BLUE)
-//    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
-//    UX_DISPLAY(ui_address_blue, ui_address_blue_prepro);
-// #elif defined(TARGET_NANOS)
-//    snprintf(fullAddress, sizeof(fullAddress), "0x%.*s", 64, tmpCtx.publicKeyContext.address);
-//    ux_step = 0;
-//    ux_step_count = 2;
-//    UX_DISPLAY(ui_address_nanos, ui_address_prepro);   
-// #endif // #if TARGET_ID
-                    
-//     *flags |= IO_ASYNCH_REPLY;
-//   }
+  *tx = set_result_get_publicKey(&public_key);
+  THROW(0x9000);
 }
 
 void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
@@ -1223,7 +1046,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
   uint256_t gasPrice, startGas, uint256;
   uint32_t i;
   uint8_t address[65];
-  uint8_t decimals = WEI_TO_ETHER;
+  uint8_t decimals = WEI_TO_AION;
   uint8_t *ticker = PIC(chainConfig->coinName);
   uint8_t tickerOffset = 0;
   if (p1 == P1_FIRST) {
@@ -1266,7 +1089,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
     PRINTF("Parser not initialized\n");
     THROW(0x6985);
   }
-  txResult = processTx(&txContext, workBuffer, dataLength, (chainConfig->kind == CHAIN_KIND_WANCHAIN ? TX_FLAG_TYPE : 0));
+  txResult = processTx(&txContext, workBuffer, dataLength, 0);
   switch (txResult) {
     case USTREAM_FINISHED:
       break;
@@ -1292,75 +1115,15 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
     if (tokenContext.provisioned) {
         uint32_t numTokens = 0;
         switch(chainConfig->kind) {
-          case CHAIN_KIND_AKROMA:
-            numTokens = NUM_TOKENS_AKROMA;
-            break;
-          case CHAIN_KIND_ETHEREUM:
-            numTokens = NUM_TOKENS_ETHEREUM;
-            break;
-          case CHAIN_KIND_ETHEREUM_CLASSIC:
-            numTokens = NUM_TOKENS_ETHEREUM_CLASSIC;
-            break;       
-          case CHAIN_KIND_PIRL:
-            numTokens = NUM_TOKENS_PIRL;
-            break;
-          case CHAIN_KIND_POA:
-            numTokens = NUM_TOKENS_POA;
-            break;
-          case CHAIN_KIND_RSK:
-            numTokens = NUM_TOKENS_RSK;
-            break;                      
-          case CHAIN_KIND_EXPANSE:
-            numTokens = NUM_TOKENS_EXPANSE;
-            break;
-          case CHAIN_KIND_UBIQ:
-            numTokens = NUM_TOKENS_UBIQ;
-            break;
-          case CHAIN_KIND_WANCHAIN:
-            numTokens = NUM_TOKENS_WANCHAIN;
-            break;        
-          case CHAIN_KIND_KUSD:
-            numTokens = NUM_TOKENS_KUSD;
-            break;    
-          case CHAIN_KIND_MUSICOIN:
-            numTokens = NUM_TOKENS_MUSICOIN;
+          case CHAIN_KIND_AION:
+            numTokens = NUM_TOKENS_AION;
             break;
         }
         for (i=0; i<numTokens; i++) {
             tokenDefinition_t *currentToken = NULL;
             switch(chainConfig->kind) {
-              case CHAIN_KIND_AKROMA:
-                currentToken = PIC(&TOKENS_AKROMA[i]);
-                break;
-              case CHAIN_KIND_ETHEREUM:
-                currentToken = PIC(&TOKENS_ETHEREUM[i]);
-                break;
-              case CHAIN_KIND_ETHEREUM_CLASSIC:
-                currentToken = PIC(&TOKENS_ETHEREUM_CLASSIC[i]);
-                break;                
-              case CHAIN_KIND_PIRL:
-                currentToken = PIC(&TOKENS_PIRL[i]);
-                break;
-              case CHAIN_KIND_POA:
-		            currentToken = PIC(&TOKENS_POA[i]);
-            		break;
-              case CHAIN_KIND_RSK:
-                currentToken = PIC(&TOKENS_RSK[i]);
-                break;                                
-              case CHAIN_KIND_EXPANSE:
-                currentToken = PIC(&TOKENS_EXPANSE[i]);
-                break;              
-              case CHAIN_KIND_UBIQ:
-                currentToken = PIC(&TOKENS_UBIQ[i]);
-                break;              
-              case CHAIN_KIND_WANCHAIN:
-                currentToken = PIC(&TOKENS_WANCHAIN[i]);
-                break;                              
-              case CHAIN_KIND_KUSD:
-                currentToken = PIC(&TOKENS_KUSD[i]);
-                break;
-              case CHAIN_KIND_MUSICOIN:
-                currentToken = PIC(&TOKENS_MUSICOIN[i]);
+              case CHAIN_KIND_AION:
+                currentToken = PIC(&TOKENS_AION[i]);
                 break;
             } 
             if (os_memcmp(currentToken->address, tmpContent.txContent.destination, 32) == 0) {
@@ -1384,14 +1147,6 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
   // Add address
   if (tmpContent.txContent.destinationLength != 0) {
     getEthAddressStringFromBinary(tmpContent.txContent.destination, address, &sha3);
-    /*
-    addressSummary[0] = '0';
-    addressSummary[1] = 'x';
-    os_memmove((unsigned char *)(addressSummary + 2), address, 4);
-    os_memmove((unsigned char *)(addressSummary + 6), "...", 3);
-    os_memmove((unsigned char *)(addressSummary + 9), address + 40 - 4, 4);
-    addressSummary[13] = '\0';
-    */
 
     fullAddress[0] = '0';
     fullAddress[1] = 'x';
@@ -1403,7 +1158,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
     os_memmove((void*)addressSummary, CONTRACT_ADDRESS, sizeof(CONTRACT_ADDRESS));
     strcpy(fullAddress, "Contract");
   }
-  // Add amount in ethers or tokens
+  // Add amount in aion
   convertUint256BE(tmpContent.txContent.value.value, tmpContent.txContent.value.length, &uint256);
   tostring256(&uint256, 10, (char *)(G_io_apdu_buffer + 100), 100);
   i = 0;
@@ -1431,7 +1186,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
   while (G_io_apdu_buffer[100 + i]) {
     i++;
   }
-  adjustDecimals((char *)(G_io_apdu_buffer + 100), i, (char *)G_io_apdu_buffer, 100, WEI_TO_ETHER);
+  adjustDecimals((char *)(G_io_apdu_buffer + 100), i, (char *)G_io_apdu_buffer, 100, WEI_TO_AION);
   i = 0;
   tickerOffset=0;
   while (ticker[tickerOffset]) {
@@ -1471,87 +1226,6 @@ void handleGetAppConfiguration(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint
   THROW(0x9000);
 }
 
-/*void handleSignPersonalMessage(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength, volatile unsigned int *flags, volatile unsigned int *tx) {
-  UNUSED(tx);
-  uint8_t hashMessage[32];
-  if (p1 == P1_FIRST) {
-    char tmp[11];
-    uint32_t index;
-    uint32_t base = 10;
-    uint8_t pos = 0;
-    uint32_t i;
-    tmpCtx.messageSigningContext.pathLength = workBuffer[0];
-    if ((tmpCtx.messageSigningContext.pathLength < 0x01) ||
-        (tmpCtx.messageSigningContext.pathLength > MAX_BIP32_PATH)) {
-        PRINTF("Invalid path\n");
-        THROW(0x6a80);
-    }
-    workBuffer++;
-    dataLength--;
-    for (i = 0; i < tmpCtx.messageSigningContext.pathLength; i++) {
-        tmpCtx.messageSigningContext.bip32Path[i] =
-          (workBuffer[0] << 24) | (workBuffer[1] << 16) |
-          (workBuffer[2] << 8) | (workBuffer[3]);
-        workBuffer += 4;
-        dataLength -= 4;
-    }
-    tmpCtx.messageSigningContext.remainingLength =
-      (workBuffer[0] << 24) | (workBuffer[1] << 16) |
-      (workBuffer[2] << 8) | (workBuffer[3]);
-    workBuffer += 4;
-    dataLength -= 4;
-    // Initialize message header + length
-    cx_keccak_init(&sha3, 256);
-    cx_hash((cx_hash_t *)&sha3, 0, SIGN_MAGIC, sizeof(SIGN_MAGIC) - 1, NULL);
-    for (index = 1; (((index * base) <= tmpCtx.messageSigningContext.remainingLength) &&
-                         (((index * base) / base) == index));
-             index *= base);
-    for (; index; index /= base) {
-      tmp[pos++] = '0' + ((tmpCtx.messageSigningContext.remainingLength / index) % base);
-    }
-    tmp[pos] = '\0';
-    cx_hash((cx_hash_t *)&sha3, 0, tmp, pos, NULL);
-    cx_sha256_init(&tmpContent.sha2);
-  } 
-  else if (p1 != P1_MORE) {
-    THROW(0x6B00);
-  }
-  if (p2 != 0) {
-    THROW(0x6B00);
-  }
-  if (dataLength > tmpCtx.messageSigningContext.remainingLength) {
-      THROW(0x6A80);
-  }
-  cx_hash((cx_hash_t *)&sha3, 0, workBuffer, dataLength, NULL);
-  cx_hash((cx_hash_t *)&tmpContent.sha2, 0, workBuffer, dataLength, NULL);
-  tmpCtx.messageSigningContext.remainingLength -= dataLength;
-  if (tmpCtx.messageSigningContext.remainingLength == 0) {
-    cx_hash((cx_hash_t *)&sha3, CX_LAST, workBuffer, 0, tmpCtx.messageSigningContext.hash);
-    cx_hash((cx_hash_t *)&tmpContent.sha2, CX_LAST, workBuffer, 0, hashMessage);
-
-#define HASH_LENGTH 4
-    array_hexstr(fullAddress, hashMessage, HASH_LENGTH / 2);
-    fullAddress[HASH_LENGTH / 2 * 2] = '.';
-    fullAddress[HASH_LENGTH / 2 * 2 + 1] = '.';
-    fullAddress[HASH_LENGTH / 2 * 2 + 2] = '.';
-    array_hexstr(fullAddress + HASH_LENGTH / 2 * 2 + 3, hashMessage + 32 - HASH_LENGTH / 2, HASH_LENGTH / 2);
-
-#if defined(TARGET_BLUE)
-    ui_approval_message_sign_blue_init();
-#elif defined(TARGET_NANOS)
-    ux_step = 0;
-    ux_step_count = 2;
-    UX_DISPLAY(ui_approval_signMessage_nanos,
-                   ui_approval_signMessage_prepro);
-#endif // #if TARGET_ID
-
-    *flags |= IO_ASYNCH_REPLY;
-
-  } else {
-    THROW(0x9000);
-  }
-}*/
-
 void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
   unsigned short sw = 0;
 
@@ -1573,10 +1247,6 @@ void handleApdu(volatile unsigned int *flags, volatile unsigned int *tx) {
         case INS_GET_APP_CONFIGURATION: 
           handleGetAppConfiguration(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
           break;
-
-        // case INS_SIGN_PERSONAL_MESSAGE: 
-        //   handleSignPersonalMessage(G_io_apdu_buffer[OFFSET_P1], G_io_apdu_buffer[OFFSET_P2], G_io_apdu_buffer + OFFSET_CDATA, G_io_apdu_buffer[OFFSET_LC], flags, tx);
-        //   break;
 
 #if 0
         case 0xFF: // return to dashboard
@@ -1767,7 +1437,7 @@ chain_config_t const C_chain_config = {
 };
 
 __attribute__((section(".boot"))) int main(int arg0) {
-#ifdef USE_LIB_ETHEREUM
+#ifdef USE_LIB_AION
     chain_config_t local_chainConfig;
     os_memmove(&local_chainConfig, &C_chain_config, sizeof(chain_config_t));
     unsigned int libcall_params[3];
@@ -1783,8 +1453,8 @@ __attribute__((section(".boot"))) int main(int arg0) {
         TRY {
             // ensure syscall will accept us
             check_api_level(CX_COMPAT_APILEVEL);
-            // delegate to Ethereum app/lib
-            libcall_params[0] = "Ethereum";
+            // delegate to aion app/lib
+            libcall_params[0] = "AION";
             libcall_params[1] = 0x100; // use the Init call, as we won't exit
             libcall_params[2] = &local_chainConfig;
             os_lib_call(&libcall_params);

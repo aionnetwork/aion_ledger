@@ -21,7 +21,7 @@ endif
 include $(BOLOS_SDK)/Makefile.defines
 
 APP_LOAD_FLAGS= --appFlags 0x40 --dep Aion
-DEFINES_LIB = USE_LIB_ETHEREUM
+DEFINES_LIB = USE_LIB_AION
 APP_LOAD_PARAMS= --curve ed25519 $(COMMON_LOAD_PARAMS) 
 
 APPVERSION_M=1
@@ -29,19 +29,16 @@ APPVERSION_N=0
 APPVERSION_P=0
 APPVERSION=$(APPVERSION_M).$(APPVERSION_N).$(APPVERSION_P)
 
-
 CHAIN=aion
 
 
-#TODO : Fix in 1.4.3
 #APP_LOAD_PARAMS += --path "44'/60'"
 APP_LOAD_PARAMS += --path "44'"
-DEFINES += CHAINID_UPCASE=\"Aion\" CHAINID_COINNAME=\"Aion\" CHAIN_KIND=CHAIN_KIND_ETHEREUM CHAIN_ID=0
+DEFINES += CHAINID_UPCASE=\"Aion\" CHAINID_COINNAME=\"Aion\" CHAIN_KIND=CHAIN_KIND_AION CHAIN_ID=0
 APPNAME = "Aion"
 DEFINES_LIB=
 APP_LOAD_FLAGS=--appFlags 0x840
 
-APP_LOAD_PARAMS += $(APP_LOAD_FLAGS) --path "44'/1'"
 DEFINES += $(DEFINES_LIB)
 
 #prepare hsm generation
@@ -110,7 +107,7 @@ LDFLAGS  += -O3 -Os
 LDLIBS   += -lm -lgcc -lc 
 
 # import rules to compile glyphs(/pone)
-include $(BOLOS_SDK)/Makefile.glyphs
+ include $(BOLOS_SDK)/Makefile.glyphs
 
 ### variables processed by the common makefile.rules of the SDK to grab source files and include dirs
 APP_SOURCE_PATH  += src_genericwallet src_common src 
