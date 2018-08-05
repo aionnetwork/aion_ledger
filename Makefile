@@ -37,7 +37,6 @@ APP_LOAD_PARAMS += --path "44'"
 DEFINES += CHAINID_UPCASE=\"Aion\" CHAINID_COINNAME=\"Aion\" CHAIN_KIND=CHAIN_KIND_AION CHAIN_ID=0
 APPNAME = "Aion"
 DEFINES_LIB=
-APP_LOAD_FLAGS=--appFlags 0x840
 
 DEFINES += $(DEFINES_LIB)
 
@@ -121,7 +120,3 @@ delete:
 
 # import generic rules from the sdk
 include $(BOLOS_SDK)/Makefile.rules
-
-#add dependency on custom makefile filename
-dep/%.d: %.c Makefile.genericwallet
-
