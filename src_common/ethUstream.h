@@ -82,7 +82,7 @@ typedef struct txContext_t {
     void *extra;
 } txContext_t;
 
-void initTx(txContext_t *context, cx_sha3_t *sha3, txContent_t *content,
+void initTx(txContext_t *context, txContent_t *content,
             ustreamProcess_t customProcessor, void *extra);
 parserStatus_e processTx(txContext_t *context, uint8_t *buffer,
                          uint32_t length, uint32_t processingFlags);

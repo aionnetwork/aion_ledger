@@ -1,7 +1,7 @@
 
 HD Derivation path
 -------------------
-44'/425'/0'/0'/0'
+44'/425'/
 
 Installation Instructions
 --------------------------

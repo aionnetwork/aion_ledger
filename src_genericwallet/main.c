@@ -67,7 +67,7 @@ uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey);
 #define OFFSET_LC 4
 #define OFFSET_CDATA 5
 
-#define WEI_TO_AION 18
+#define nAmp_TO_AION 18
 #define MAX_TRANSACTION_SIZE 230
 
 unsigned char transaction_buffer[MAX_TRANSACTION_SIZE];
@@ -93,26 +93,16 @@ typedef struct transactionContext_t {
     uint8_t hash[32];
 } transactionContext_t;
 
-typedef struct messageSigningContext_t {
-    uint8_t pathLength;
-    uint32_t bip32Path[MAX_BIP32_PATH];
-    uint8_t hash[32];
-    uint32_t remainingLength;    
-} messageSigningContext_t;
-
 union {
     publicKeyContext_t publicKeyContext;
     transactionContext_t transactionContext;
-    messageSigningContext_t messageSigningContext;
 } tmpCtx;
 txContext_t txContext;
 
 union {
   txContent_t txContent;
-  cx_sha256_t sha2;
 } tmpContent;
 
-cx_sha3_t sha3;
 tokenContext_t tokenContext;
 volatile uint8_t dataAllowed;
 volatile char addressSummary[32];
@@ -798,41 +788,11 @@ unsigned int io_seproxyhal_touch_exit(const bagl_element_t *e) {
     return 0; // do not redraw the widget
 }
 
-uint32_t getV(txContent_t *txContent) {
-    uint32_t v = 0;
-    if (txContent->vLength == 1) {
-      v = txContent->v[0];
-    }
-    else 
-    if (txContent->vLength == 2) {
-      v = (txContent->v[0] << 8) | txContent->v[1];
-    }
-    else 
-    if (txContent->vLength == 3) {
-      v = (txContent->v[0] << 16) | (txContent->v[1] << 8) | txContent->v[2];
-    }    
-    else
-    if (txContent->vLength == 4) {
-      v = (txContent->v[0] << 24) | (txContent->v[1] << 16) | 
-          (txContent->v[2] << 8) | txContent->v[3];
-    }
-    else 
-    if (txContent->vLength != 0) {
-        PRINTF("Unexpected v format\n");
-        THROW(EXCEPTION);
-    }
-    return v;
-
-}
-
 unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     uint8_t privateKeyData[32];
-    //uint8_t signature[100];
     uint8_t signatureLength;
     cx_ecfp_private_key_t privateKey;
     uint32_t tx = 0;
-    uint8_t rLength, sLength, rOffset, sOffset;
-    uint32_t v = getV(&tmpContent.txContent);
     os_perso_derive_node_bip32(CX_CURVE_Ed25519, tmpCtx.transactionContext.bip32Path,
                                tmpCtx.transactionContext.pathLength,
                                privateKeyData, NULL);
@@ -1031,7 +991,7 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
     dataBuffer += 4;
   }
   tmpCtx.publicKeyContext.getChaincode = (p2 == P2_CHAINCODE);
-  os_perso_derive_node_bip32(CX_CURVE_Ed25519, bip32Path, bip32PathLength, privateKeyData, (tmpCtx.publicKeyContext.getChaincode ? tmpCtx.publicKeyContext.chainCode : NULL));
+  os_perso_derive_node_bip32(CX_CURVE_Ed25519, bip32Path, bip32PathLength, privateKeyData, NULL);
   cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, &privateKey);
   cx_ecfp_generate_pair(CX_CURVE_Ed25519, &public_key, &privateKey, 1);
   os_memset(&privateKey, 0, sizeof(privateKey));
@@ -1046,7 +1006,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
   uint256_t gasPrice, startGas, uint256;
   uint32_t i;
   uint8_t address[65];
-  uint8_t decimals = WEI_TO_AION;
+  uint8_t decimals = nAmp_TO_AION;
   uint8_t *ticker = PIC(chainConfig->coinName);
   uint8_t tickerOffset = 0;
   if (p1 == P1_FIRST) {
@@ -1070,13 +1030,16 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
 
     // concatenate to transaction buffer
     uint16_t i = 0;  
+    if(dataLength > MAX_TRANSACTION_SIZE){
+      THROW(0x6A80);
+    }
     buffer_counter =  dataLength;      
     for(i=0;i<dataLength;i++){
       transaction_buffer[i] = workBuffer[i];
     }
     transaction_buffer[buffer_counter] = '\0';
 
-    initTx(&txContext, &sha3, &tmpContent.txContent, customProcessor, NULL);
+    initTx(&txContext, &tmpContent.txContent, customProcessor, NULL);
   } 
   else 
   if (p1 != P1_MORE) {
@@ -1101,52 +1064,42 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
       PRINTF("Unexpected parser status\n");
       THROW(0x6A80);
   }
-  // Verify the chain
-  if (chainConfig->chainId != 0) {
-    uint32_t v = getV(&tmpContent.txContent);
-    if (chainConfig->chainId != v) {
-        PRINTF("Invalid chainId %d expected %d\n", v, chainConfig->chainId);
-        THROW(0x6A80);
+  // If there is a token to process, check if it is well known
+  if (tokenContext.provisioned) {
+    uint32_t numTokens = 0;
+    switch(chainConfig->kind) {
+      case CHAIN_KIND_AION:
+        numTokens = NUM_TOKENS_AION;
+        break;
     }
-  }
-  // Store the hash
-  cx_hash((cx_hash_t *)&sha3, CX_LAST, tmpCtx.transactionContext.hash, 0, tmpCtx.transactionContext.hash);
-    // If there is a token to process, check if it is well known
-    if (tokenContext.provisioned) {
-        uint32_t numTokens = 0;
-        switch(chainConfig->kind) {
-          case CHAIN_KIND_AION:
-            numTokens = NUM_TOKENS_AION;
-            break;
-        }
-        for (i=0; i<numTokens; i++) {
-            tokenDefinition_t *currentToken = NULL;
-            switch(chainConfig->kind) {
-              case CHAIN_KIND_AION:
-                currentToken = PIC(&TOKENS_AION[i]);
-                break;
-            } 
-            if (os_memcmp(currentToken->address, tmpContent.txContent.destination, 32) == 0) {
-                dataPresent = false;
-                decimals = currentToken->decimals;
-                ticker = currentToken->ticker;
-                tmpContent.txContent.destinationLength = 32;
-                os_memmove(tmpContent.txContent.destination, tokenContext.data + 4 + 12, 32);
-                os_memmove(tmpContent.txContent.value.value, tokenContext.data + 4 + 32, 32);
-                tmpContent.txContent.value.length = 32;
-                break;
-            }
-        }
-    }  
-    else {
-      if (dataPresent && !N_storage.dataAllowed) {
-          PRINTF("Data field forbidden\n");
-          THROW(0x6A80);
+    for (i=0; i<numTokens; i++) {
+      tokenDefinition_t *currentToken = NULL;
+      switch(chainConfig->kind) {
+        case CHAIN_KIND_AION:
+          currentToken = PIC(&TOKENS_AION[i]);
+          break;
       } 
+      if (os_memcmp(currentToken->address, tmpContent.txContent.destination, 32) == 0) {
+        dataPresent = false;
+        decimals = currentToken->decimals;
+        ticker = currentToken->ticker;
+        tmpContent.txContent.destinationLength = 32;
+        os_memmove(tmpContent.txContent.destination, tokenContext.data + 4 + 12, 32);
+        os_memmove(tmpContent.txContent.value.value, tokenContext.data + 4 + 32, 32);
+        tmpContent.txContent.value.length = 32;
+        break;
+      }
     }
+  }  
+  else {
+    if (dataPresent && !N_storage.dataAllowed) {
+      PRINTF("Data field forbidden\n");
+      THROW(0x6A80);
+    } 
+  }
   // Add address
   if (tmpContent.txContent.destinationLength != 0) {
-    getEthAddressStringFromBinary(tmpContent.txContent.destination, address, &sha3);
+    getEthAddressStringFromBinary(tmpContent.txContent.destination, address);
 
     fullAddress[0] = '0';
     fullAddress[1] = 'x';
@@ -1186,7 +1139,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
   while (G_io_apdu_buffer[100 + i]) {
     i++;
   }
-  adjustDecimals((char *)(G_io_apdu_buffer + 100), i, (char *)G_io_apdu_buffer, 100, WEI_TO_AION);
+  adjustDecimals((char *)(G_io_apdu_buffer + 100), i, (char *)G_io_apdu_buffer, 100, nAmp_TO_AION);
   i = 0;
   tickerOffset=0;
   while (ticker[tickerOffset]) {
@@ -1436,35 +1389,7 @@ chain_config_t const C_chain_config = {
 #endif // TARGET_BLUE
 };
 
-__attribute__((section(".boot"))) int main(int arg0) {
-#ifdef USE_LIB_AION
-    chain_config_t local_chainConfig;
-    os_memmove(&local_chainConfig, &C_chain_config, sizeof(chain_config_t));
-    unsigned int libcall_params[3];
-    unsigned char coinName[sizeof(CHAINID_COINNAME)];
-    strcpy(coinName, CHAINID_COINNAME);
-#ifdef TARGET_BLUE
-    unsigned char coinNameUP[sizeof(CHAINID_UPCASE)];
-    strcpy(coinNameUP, CHAINID_UPCASE);
-    local_chainConfig.header_text = coinNameUP;
-#endif // TARGET_BLUE
-    local_chainConfig.coinName = coinName;
-    BEGIN_TRY {
-        TRY {
-            // ensure syscall will accept us
-            check_api_level(CX_COMPAT_APILEVEL);
-            // delegate to aion app/lib
-            libcall_params[0] = "AION";
-            libcall_params[1] = 0x100; // use the Init call, as we won't exit
-            libcall_params[2] = &local_chainConfig;
-            os_lib_call(&libcall_params);
-        }
-        FINALLY {
-            app_exit();
-        }
-    }
-    END_TRY;    
-#else    
+__attribute__((section(".boot"))) int main(int arg0) { 
     // exit critical section
     __asm volatile("cpsie i");
 
@@ -1523,6 +1448,5 @@ __attribute__((section(".boot"))) int main(int arg0) {
         END_TRY;
     }
 	  app_exit();
-#endif
     return 0;
 }
