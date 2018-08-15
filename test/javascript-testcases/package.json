@@ -1,5 +1,5 @@
 {
-  "name": "blue-app-neo-tests",
+  "name": "blue-app-aion",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,8 +7,6 @@
     "test:node-hid": "mocha ./test/node-hid.js --no-timeouts",
     "test:u2f": "webpack-dev-server"
   },
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "@ledgerhq/hw-transport-node-hid": "^4.12.0",
     "@ledgerhq/hw-transport-u2f": "^4.12.0",
