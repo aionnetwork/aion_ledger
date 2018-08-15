@@ -1,10 +1,10 @@
 # Windows-10 Aion Ledger HID driver
 
 ## Steps
-Unzip Aion-HID.zip
-Browse to HID directory in Aion-HID
-Set path variable : SET PATH=%PATH%;$HOME\Aion-HID
-npm install
+Unzip Aion-HID.zip <br />
+Browse to HID directory in Aion-HID <br />
+Set path variable : SET PATH=%PATH%;$HOME\Aion-HID <br />
+npm install <br />
 
 ## Example
 ```
