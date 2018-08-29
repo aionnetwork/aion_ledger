@@ -1,7 +1,7 @@
 
 **Beta Version for Ledger Review**
 
-**Step by step application guide** : https://github.com/aionnetwork/aion_ledger/blob/dev/companion_app/Aion-Ledger-Guide.pdf <br />
+**Step by step application guide** : https://docs.aion.network/v1.0/docs/ledger-wallet-hardware-guide <br />
 
 **Aion Nano S installation** : <br />
 a) git clone https://github.com/aionnetwork/aion_ledger/tree/dev <br />
