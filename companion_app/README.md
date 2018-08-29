@@ -11,6 +11,7 @@ d) Deletion : make delete BOLOS_SDK={$SDK_LOCATION} BOLOS_ENV={$ENV_LOCATION} <b
 
 **Windows 10 Wallet link** : companion_app/Windows/AionWalletSetup.exe <br />
 **Linux Wallet link** : companion_app/Ubuntu-16.04LTS/aion_ui.zip => sh aion_ui.sh <br />
+**Mac Wallet link** : companion_app/Mac-OS/aion_ui.zip => sh aion_ui.sh <br />
 
 **Connecting with Aion Blockchain from windows wallet:** <br />
 a) Open aion windows wallet <br />
