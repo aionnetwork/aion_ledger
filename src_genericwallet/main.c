@@ -1030,7 +1030,7 @@ void handleSign(uint8_t p1, uint8_t p2, uint8_t *workBuffer, uint16_t dataLength
 
     // concatenate to transaction buffer
     uint16_t i = 0;  
-    if(dataLength > MAX_TRANSACTION_SIZE){
+    if(dataLength >= MAX_TRANSACTION_SIZE){
       THROW(0x6A80);
     }
     buffer_counter =  dataLength;      
