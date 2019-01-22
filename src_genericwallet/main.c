@@ -26,9 +26,9 @@
 
 #include "os_io_seproxyhal.h"
 #include "string.h"
-#include "blake2b-ref.h"
 
 #include "glyphs.h"
+#include "stdlib.h"
 
 #define __NAME3(a, b, c) a##b##c
 #define NAME3(a, b, c) __NAME3(a, b, c)
@@ -72,6 +72,7 @@ uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey);
 
 unsigned char transaction_buffer[MAX_TRANSACTION_SIZE];
 uint16_t buffer_counter = 0;
+cx_blake2b_t blake;
 
 static const uint8_t const TOKEN_TRANSFER_ID[] = { 0xa9, 0x05, 0x9c, 0xbb };
 typedef struct tokenContext_t {
@@ -793,9 +794,10 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     uint8_t signatureLength;
     cx_ecfp_private_key_t privateKey;
     uint32_t tx = 0;
-    os_perso_derive_node_bip32(CX_CURVE_Ed25519, tmpCtx.transactionContext.bip32Path,
+    os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10,
+                               CX_CURVE_Ed25519, tmpCtx.transactionContext.bip32Path,
                                tmpCtx.transactionContext.pathLength,
-                               privateKeyData, NULL);
+                               privateKeyData, NULL, (unsigned char*) "ed25519 seed", 12);
     cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32,
                                  &privateKey);
     os_memset(privateKeyData, 0, sizeof(privateKeyData));
@@ -803,7 +805,8 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
 
     // get hash
     unsigned char hash[HASH_SIZE];
-    blake2b(hash, transaction_buffer, NULL, HASH_SIZE, buffer_counter, 0);
+    cx_blake2b_init(&blake, HASH_SIZE*8);
+    cx_hash_X((cx_hash_t *) &blake, CX_LAST, transaction_buffer, buffer_counter, hash);
 
     signatureLength =
         cx_eddsa_sign(&privateKey, CX_LAST, CX_SHA512,
@@ -919,7 +922,8 @@ uint32_t set_result_get_publicKey(cx_ecfp_public_key_t* pubKey) {
 
     // map address from public key
     unsigned char hash[HASH_SIZE];
-    blake2b(hash, publicKey, NULL, HASH_SIZE, KEY_SIZE, 0);
+    cx_blake2b_init(&blake, HASH_SIZE*8);
+    cx_hash_X((cx_hash_t *) &blake, CX_LAST, publicKey, KEY_SIZE, hash);
     hash[0] = 0xa0;
 
     // write to output buffer
@@ -991,7 +995,7 @@ void handleGetPublicKey(uint8_t p1, uint8_t p2, uint8_t *dataBuffer, uint16_t da
     dataBuffer += 4;
   }
   tmpCtx.publicKeyContext.getChaincode = (p2 == P2_CHAINCODE);
-  os_perso_derive_node_bip32(CX_CURVE_Ed25519, bip32Path, bip32PathLength, privateKeyData, NULL);
+  os_perso_derive_node_bip32_seed_key(HDW_ED25519_SLIP10, CX_CURVE_Ed25519, bip32Path, bip32PathLength, privateKeyData, NULL, (unsigned char*) "ed25519 seed", 12);
   cx_ecfp_init_private_key(CX_CURVE_Ed25519, privateKeyData, 32, &privateKey);
   cx_ecfp_generate_pair(CX_CURVE_Ed25519, &public_key, &privateKey, 1);
   os_memset(&privateKey, 0, sizeof(privateKey));
